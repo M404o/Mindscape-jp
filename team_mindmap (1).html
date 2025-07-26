@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Atmosphere Mindmap - HR Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-top: 0.2rem;
+        }
+
+        .dashboard-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            margin-top: 0.2rem;
+        }
+
+        .mindmap-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mindmap-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ノードのスタイル */
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform-origin: center center;
+        }
+
+        .node:hover {
+            transform: scale(1.02);
+        }
+
+        .node-circle {
+            fill: #ffffff;
+            stroke-width: 3;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            transition: all 0.3s ease;
+        }
+
+        .node-circle:hover {
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+        }
+
+        .ceo-node .node-circle {
+            stroke: #2c3e50;
+            fill: #2c3e50;
+        }
+
+        .department-node .node-circle {
+            stroke: #007bff;
+            fill: #ffffff;
+        }
+
+        .member-node .node-circle {
+            stroke-width: 2;
+            fill: #ffffff;
+        }
+
+        .node-text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-weight: 600;
+            fill: #2c3e50;
+            font-size: 12px;
+        }
+
+        .ceo-node .node-text {
+            fill: #ffffff;
+            font-size: 14px;
+        }
+
+        .department-text {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .member-name {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .member-emoji {
+            font-size: 16px;
+        }
+
+        .member-score {
+            font-size: 10px;
+            fill: #6c757d;
+            font-weight: 500;
+        }
+
+        /* 接続線 */
+        .connection-line {
+            stroke: #dee2e6;
+            stroke-width: 2;
+            fill: none;
+            transition: all 0.3s ease;
+        }
+
+        .connection-line.highlighted {
+            stroke: #007bff;
+            stroke-width: 3;
+        }
+
+        /* ステータス色 */
+        .status-excellent { stroke: #28a745; }
+        .status-good { stroke: #17a2b8; }
+        .status-moderate { stroke: #ffc107; }
+        .status-attention { stroke: #fd7e14; }
+        .status-concern { stroke: #dc3545; }
+
+        /* ツールチップ */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 300px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .tooltip-content {
+            line-height: 1.4;
+        }
+
+        .tooltip-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+
+        .tooltip-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        /* 凡例 */
+        .legend {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .legend-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 0.8rem;
+            border: 2px solid currentColor;
+        }
+
+        /* アクションパネル */
+        .action-panel {
+            position: absolute;
+            top: 50%;
+            right: 2rem;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            min-width: 280px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .action-panel.visible {
+            opacity: 1;
+        }
+
+        .action-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .action-item {
+            background: rgba(0, 123, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #007bff;
+        }
+
+        .action-item h4 {
+            color: #007bff;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-item p {
+            color: #495057;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .dashboard-stats {
+                gap: 1rem;
+            }
+
+            .legend,
+            .action-panel {
+                position: relative;
+                margin: 1rem;
+                right: auto;
+                bottom: auto;
+                transform: none;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="dashboard-title">Team Atmosphere Dashboard</h1>
+                    <p class="dashboard-subtitle">Real-time team wellness visualization • Updated 2 hours ago</p>
+                </div>
+                <div class="dashboard-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">24</div>
+                        <div class="stat-label">Team Members</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">78%</div>
+                        <div class="stat-label">Avg Wellness</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Need Support</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mindmap-container">
+            <svg class="mindmap-svg" id="mindmapSvg">
+                <!-- マインドマップはJavaScriptで動的生成 -->
+            </svg>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Wellness Levels</div>
+            <div class="legend-item">
+                <div class="legend-color status-excellent"></div>
+                <span>Excellent (85-100%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-good"></div>
+                <span>Good (70-84%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-moderate"></div>
+                <span>Moderate (55-69%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-attention"></div>
+                <span>Needs Attention (40-54%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-concern"></div>
+                <span>Concern (Below 40%)</span>
+            </div>
+        </div>
+
+        <div class="action-panel" id="actionPanel">
+            <div class="action-title">Recommended Actions</div>
+            <div id="actionContent">
+                <div class="action-item">
+                    <h4>🎯 Focus Area</h4>
+                    <p>Click on team members to see personalized support recommendations</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tooltip" id="tooltip">
+            <div class="tooltip-title" id="tooltipTitle"></div>
+            <div class="tooltip-content" id="tooltipContent"></div>
+            <div class="tooltip-tags" id="tooltipTags"></div>
+        </div>
+    </div>
+
+    <script>
+        // チームデータ
+        const teamData = {
+            ceo: {
+                name: "CEO",
+                x: 400,
+                y: 150,
+                wellness: 82,
+                emoji: "👑",
+                landscape: "Mountain Peak",
+                tags: ["leadership", "strategic", "calm"],
+                insights: "Strong leadership presence with clear vision. Maintains balanced perspective despite high-pressure decisions."
+            },
+            departments: [
+                {
+                    name: "Sales",
+                    x: 200,
+                    y: 300,
+                    members: [
+                        { name: "田中", wellness: 88, emoji: "🌊", landscape: "Ocean Breeze", tags: ["energetic", "social", "optimistic"] },
+                        { name: "佐藤", wellness: 72, emoji: "🌸", landscape: "Spring Garden", tags: ["gentle", "patient", "growing"] },
+                        { name: "鈴木", wellness: 45, emoji: "🌑", landscape: "Night Storm", tags: ["stressed", "overwhelmed", "support-needed"] }
+                    ]
+                },
+                {
+                    name: "Development",
+                    x: 400,
+                    y: 350,
+                    members: [
+                        { name: "山田", wellness: 91, emoji: "🚀", landscape: "Starry Sky", tags: ["innovative", "focused", "inspired"] },
+                        { name: "高橋", wellness: 58, emoji: "🌫️", landscape: "Misty Valley", tags: ["uncertain", "transitional", "seeking-clarity"] },
+                        { name: "伊藤", wellness: 76, emoji: "🔥", landscape: "Warm Hearth", tags: ["passionate", "dedicated", "energetic"] }
+                    ]
+                },
+                {
+                    name: "HR",
+                    x: 600,
+                    y: 300,
+                    members: [
+                        { name: "中村", wellness: 85, emoji: "🌱", landscape: "Growing Forest", tags: ["nurturing", "stable", "supportive"] },
+                        { name: "小林", wellness: 79, emoji: "☀️", landscape: "Golden Sunrise", tags: ["positive", "uplifting", "motivating"] }
+                    ]
+                }
+            ]
+        };
+
+        let currentTooltip = null;
+        let selectedNode = null;
+
+        // SVGセットアップ
+        const svg = document.getElementById('mindmapSvg');
+        const tooltip = document.getElementById('tooltip');
+        const actionPanel = document.getElementById('actionPanel');
+
+        // ウェルネススコアから色を取得
+        function getWellnessColor(score) {
+            if (score >= 85) return '#28a745';
+            if (score >= 70) return '#17a2b8';
+            if (score >= 55) return '#ffc107';
+            if (score >= 40) return '#fd7e14';
+            return '#dc3545';
+        }
+
+        // ウェルネススコアからクラス名を取得
+        function getWellnessClass(score) {
+            if (score >= 85) return 'status-excellent';
+            if (score >= 70) return 'status-good';
+            if (score >= 55) return 'status-moderate';
+            if (score >= 40) return 'status-attention';
+            return 'status-concern';
+        }
+
+        // マインドマップを描画
+        function createMindmap() {
+            svg.innerHTML = '';
+
+            // CEO ノード
+            createNode(teamData.ceo.x, teamData.ceo.y, 'ceo', teamData.ceo);
+
+            // 部署とメンバー
+            teamData.departments.forEach((dept, deptIndex) => {
+                // 部署への接続線
+                createConnection(teamData.ceo.x, teamData.ceo.y, dept.x, dept.y);
+                
+                // 部署ノード
+                createDepartmentNode(dept.x, dept.y, dept.name, dept.members);
+
+                // メンバーノード
+                dept.members.forEach((member, memberIndex) => {
+                    const angle = (memberIndex - (dept.members.length - 1) / 2) * 0.5;
+                    const memberX = dept.x + Math.sin(angle) * 120;
+                    const memberY = dept.y + 80 + Math.cos(angle) * 40;
+
+                    // メンバーへの接続線
+                    createConnection(dept.x, dept.y, memberX, memberY);
+                    
+                    // メンバーノード
+                    createMemberNode(memberX, memberY, member, dept.name);
+                });
+            });
+        }
+
+        // 接続線を作成
+        function createConnection(x1, y1, x2, y2) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.classList.add('connection-line');
+            svg.appendChild(line);
+        }
+
+        // CEOノードを作成
+        function createNode(x, y, type, data) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('node', `${type}-node`);
+            g.setAttribute('transform', `translate(${x}, ${y})`);
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '30');
+            circle.classList.add('node-circle');
+            g.appendChild(circle);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.textContent = data.name;
+            text.classList.add('node-text');
+            g.appendChild(text);
+
+            setupNodeEvents(g, data);
+            svg.appendChild(g);
+        }
+
+        // 部署ノードを作成
+        function createDepartmentNode(x, y, name, members) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('node', 'department-node');
+            g.setAttribute('transform', `translate(${x}, ${y})`);
+
+            const avgWellness = members.reduce((sum, m) => sum + m.wellness, 0) / members.length;
+            const color = getWellnessColor(avgWellness);
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '25');
+            circle.classList.add('node-circle');
+            circle.style.stroke = color;
+            g.appendChild(circle);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.textContent = name;
+            text.classList.add('node-text', 'department-text');
+            g.appendChild(text);
+
+            const deptData = {
+                name: name,
+                wellness: Math.round(avgWellness),
+                members: members,
+                insights: `${name} department shows ${avgWellness >= 70 ? 'positive' : 'mixed'} team dynamics with ${members.filter(m => m.wellness < 60).length} members needing support.`
+            };
+
+            setupNodeEvents(g, deptData);
+            svg.appendChild(g);
+        }
+
+        // メンバーノードを作成
+        function createMemberNode(x, y, member, department) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('node', 'member-node');
+            g.setAttribute('transform', `translate(${x}, ${y})`);
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '20');
+            circle.classList.add('node-circle', getWellnessClass(member.wellness));
+            circle.style.stroke = getWellnessColor(member.wellness);
+            g.appendChild(circle);
+
+            const emoji = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            emoji.textContent = member.emoji;
+            emoji.classList.add('member-emoji');
+            emoji.setAttribute('y', '-5');
+            g.appendChild(emoji);
+
+            const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            name.textContent = member.name;
+            name.classList.add('member-name');
+            name.setAttribute('y', '8');
+            g.appendChild(name);
+
+            const score = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            score.textContent = `${member.wellness}%`;
+            score.classList.add('member-score');
+            score.setAttribute('y', '30');
+            g.appendChild(score);
+
+            const memberData = {
+                ...member,
+                department: department
+            };
+
+            setupNodeEvents(g, memberData);
+            svg.appendChild(g);
+        }
+
+        // ノードイベントの設定
+        function setupNodeEvents(node, data) {
+            node.addEventListener('mouseenter', (e) => {
+                e.stopPropagation();
+                showTooltip(e, data);
+            });
+            node.addEventListener('mouseleave', (e) => {
+                e.stopPropagation();
+                hideTooltip();
+            });
+            node.addEventListener('mousemove', (e) => {
+                e.stopPropagation();
+                if (tooltip.classList.contains('visible')) {
+                    moveTooltip(e);
+                }
+            });
+            node.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectNode(data);
+            });
+        }
+
+        // ツールチップ表示
+        function showTooltip(e, data) {
+            const tooltipTitle = document.getElementById('tooltipTitle');
+            const tooltipContent = document.getElementById('tooltipContent');
+            const tooltipTags = document.getElementById('tooltipTags');
+
+            tooltipTitle.textContent = `${data.name} ${data.emoji || ''}`;
+            tooltipContent.textContent = data.insights || `Wellness: ${data.wellness}% • Landscape: ${data.landscape || 'N/A'}`;
+            
+            tooltipTags.innerHTML = '';
+            if (data.tags) {
+                data.tags.forEach(tag => {
+                    const tagSpan = document.createElement('span');
+                    tagSpan.classList.add('tooltip-tag');
+                    tagSpan.textContent = `#${tag}`;
+                    tooltipTags.appendChild(tagSpan);
+                });
+            }
+
+            tooltip.classList.add('visible');
+            moveTooltip(e);
+        }
+
+        // ツールチップ移動
+        function moveTooltip(e) {
+            const rect = document.querySelector('.dashboard-container').getBoundingClientRect();
+            const x = e.clientX - rect.left + 15;
+            const y = e.clientY - rect.top - 10;
+            
+            // 画面からはみ出さないように調整
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const maxX = window.innerWidth - tooltipRect.width - 20;
+            const maxY = window.innerHeight - tooltipRect.height - 20;
+            
+            tooltip.style.left = Math.min(x, maxX) + 'px';
+            tooltip.style.top = Math.min(Math.max(y, 10), maxY) + 'px';
+        }
+
+        // ツールチップ非表示
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        // ノード選択
+        function selectNode(data) {
+            selectedNode = data;
+            showActionPanel(data);
+        }
+
+        // アクションパネル表示
+        function showActionPanel(data) {
+            const actionContent = document.getElementById('actionContent');
+            actionContent.innerHTML = '';
+
+            if (data.members) {
+                // 部署選択時
+                const needSupport = data.members.filter(m => m.wellness < 60);
+                if (needSupport.length > 0) {
+                    actionContent.innerHTML = `
+                        <div class="action-item">
+                            <h4>🚨 Immediate Attention</h4>
+                            <p>${needSupport.map(m => m.name).join(', ')} showing stress indicators. Schedule 1-on-1 meetings.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>💬 Team Building</h4>
+                            <p>Consider team counseling session for ${data.name} department to improve overall dynamics.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>📊 Monitor Progress</h4>
+                            <p>Schedule follow-up assessment in 2 weeks to track improvement.</p>
+                        </div>
+                    `;
+                } else {
+                    actionContent.innerHTML = `
+                        <div class="action-item">
+                            <h4>✅ Team Performing Well</h4>
+                            <p>${data.name} department shows positive indicators. Maintain current practices.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>🌟 Recognition</h4>
+                            <p>Consider acknowledging team's positive atmosphere in next meeting.</p>
+                        </div>
+                    `;
+                }
+            } else if (data.wellness) {
+                // 個人選択時
+                if (data.wellness < 60) {
+                    actionContent.innerHTML = `
+                        <div class="action-item">
+                            <h4>🤝 Personal Support</h4>
+                            <p>Schedule private consultation with ${data.name}. Check workload and personal challenges.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>🏖️ Rest & Recovery</h4>
+                            <p>Consider offering flexible work arrangements or additional time off.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>👥 Peer Support</h4>
+                            <p>Connect with high-wellness team members for mentoring.</p>
+                        </div>
+                    `;
+                } else {
+                    actionContent.innerHTML = `
+                        <div class="action-item">
+                            <h4>🌟 High Performer</h4>
+                            <p>${data.name} shows excellent wellness indicators. Consider for mentoring roles.</p>
+                        </div>
+                        <div class="action-item">
+                            <h4>🚀 Growth Opportunities</h4>
+                            <p>Engage in stretch assignments or leadership development.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            actionPanel.classList.add('visible');
+        }
+
+        // 初期化
+        createMindmap();
+
+        // リサイズ対応
+        window.addEventListener('resize', () => {
+            hideTooltip();
+            actionPanel.classList.remove('visible');
+        });
+    </script>
+</body>
+</html>
