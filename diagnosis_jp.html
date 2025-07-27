@@ -1207,10 +1207,29 @@
                 // 軽い結果へリダイレクト（即座）
                 showSeparateSuccess(sessionId);
                 
-                // 2秒後に軽い結果ページへ
-                setTimeout(() => {
-                    window.location.href = 'https://m404o.github.io/Mindscape-jp/dynamic_light_results.html';
-                }, 2000);
+               // 軽い結果 + 重い結果への案内を追加
+function showCompletionOptions() {
+    const container = document.querySelector('.container');
+    
+    const optionsHTML = `
+        <div class="glass-card">
+            <div class="step-badge">診断完了</div>
+            <h2 class="title">セパレート式処理完了</h2>
+            <p class="subtitle">診断が完了しました。結果を確認してください。</p>
+            
+            <div class="nav-buttons">
+                <button class="glass-button btn-next" onclick="window.location.href='dynamic_light_results.html'">
+                    🌸 軽い結果を見る
+                </button>
+                <button class="glass-button btn-back" onclick="window.location.href='analysis.html'">
+                    📊 重い分析結果
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = optionsHTML;
+}
                 
             } catch (error) {
                 console.error('❌ セパレート式処理エラー:', error);
