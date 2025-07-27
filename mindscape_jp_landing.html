@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindscape Japan - 次世代心理診断システム DEMO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientFlow 20s ease infinite;
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            animation: sparkle 4s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 4rem;
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: white;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 25px rgba(255, 154, 158, 0.4);
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #2d3748, #4a5568, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4rem;
+            color: #6b7280;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-item {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        /* Demo Buttons */
+        .demo-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
+
+        .demo-btn {
+            padding: 1.2rem 3rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .demo-btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Technology Section */
+        .tech-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 4rem;
+            animation: slideInUp 0.8s ease-out 0.2s both;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2d3748;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .tech-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.6));
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+        }
+
+        .tech-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tech-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .tech-desc {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* Innovation Section */
+        .innovation-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(248, 113, 113, 0.1));
+            padding: 3rem;
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            text-align: center;
+            animation: slideInUp 0.8s ease-out 0.4s both;
+        }
+
+        .innovation-badge {
+            display: inline-block;
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: white;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .innovation-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .innovation-desc {
+            font-size: 1.1rem;
+            color: #6b7280;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 5rem 1rem 1rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .demo-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .demo-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .hero-features {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Mindscape Japan</div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#demo">Demo</a></li>
+                    <li><a href="#technology">Technology</a></li>
+                    <li><a href="#innovation">Innovation</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section" id="demo">
+            <div class="hero-badge">Next-Generation Assessment</div>
+            <h1 class="hero-title">セパレート式心理診断システム</h1>
+            <p class="hero-subtitle">
+                AI技術とアート生成を融合した、革新的な企業向け心理アセスメントプラットフォーム。<br>
+                ユーザーには軽やかな体験を、企業には深い分析データを提供します。
+            </p>
+
+            <div class="hero-features">
+                <div class="feature-item">
+                    <div class="feature-icon">🌸</div>
+                    <div class="feature-title">日本語最適化</div>
+                    <div class="feature-desc">日本人の心理特性に特化した質問設計と分析アルゴリズム</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">AI画像生成</div>
+                    <div class="feature-desc">心象風景を美しいアートワークとして自動生成</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💎</div>
+                    <div class="feature-title">セパレート式</div>
+                    <div class="feature-desc">軽い体験と重い分析を分離した特許申請中の技術</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">企業ダッシュボード</div>
+                    <div class="feature-desc">組織全体の心理状態をリアルタイムで可視化</div>
+                </div>
+            </div>
+
+            <div class="demo-buttons">
+                <a href="diagnosis.html" class="demo-btn btn-primary">
+                    🌸 診断を体験する
+                </a>
+                <a href="https://m404o.github.io/d_result/" class="demo-btn btn-secondary" target="_blank">
+                    ✨ 結果画面を見る
+                </a>
+            </div>
+        </section>
+
+        <!-- Technology Section -->
+        <section class="tech-section" id="technology">
+            <h2 class="section-title">技術スタック</h2>
+            
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <div class="tech-icon">🧠</div>
+                    <h3 class="tech-title">GPT-4 心理分析</h3>
+                    <p class="tech-desc">
+                        最新のAI技術を活用した深層心理分析エンジン。
+                        従来の心理テストを超える精度と洞察を提供します。
+                    </p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-icon">🎯</div>
+                    <h3 class="tech-title">ガラススライダーUI</h3>
+                    <p class="tech-desc">
+                        直感的で美しいユーザーインターフェース。
+                        5段階評価を滑らかなガラス質感で実現。
+                    </p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-icon">🖼️</div>
+                    <h3 class="tech-title">Midjourney連携</h3>
+                    <p class="tech-desc">
+                        心象風景から自動でアートワークを生成。
+                        Discord API経由でリアルタイム画像生成。
+                    </p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-icon">🔗</div>
+                    <h3 class="tech-title">API駆動アーキテクチャ</h3>
+                    <p class="tech-desc">
+                        FastAPI + React の現代的な技術スタック。
+                        スケーラブルで保守性の高い設計。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Innovation Section -->
+        <section class="innovation-section" id="innovation">
+            <div class="innovation-badge">Patent Pending</div>
+            <h2 class="innovation-title">革新的セパレート式設計</h2>
+            <p class="innovation-desc">
+                従来の心理診断では、ユーザーは長時間待たされ、重い結果画面で混乱することがありました。
+                私たちのセパレート式は、ユーザー体験と企業分析を完全に分離し、
+                両者にとって最適な価値を提供する特許申請中の革新技術です。
+            </p>
+            
+            <div class="demo-buttons">
+                <a href="diagnosis.html" class="demo-btn btn-primary">
+                    🚀 今すぐ体験開始
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Mindscape Japan. セパレート式心理診断システム - 特許申請中</p>
+        <p><a href="#demo">Demo</a> | <a href="#technology">Technology</a> | <a href="#innovation">Innovation</a></p>
+    </footer>
+
+    <script>
+        // Sparkle effect
+        function createSparkles() {
+            for (let i = 0; i < 15; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.animationDelay = Math.random() * 4 + 's';
+                document.body.appendChild(sparkle);
+            }
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            createSparkles();
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
+</body>
+</html>
