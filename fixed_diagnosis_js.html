@@ -1,0 +1,173 @@
+// 重い分析処理（バックグラウンド）
+        async function processHeavyAnalysis(assessmentData) {
+            console.log('🧠 重い分析処理開始（バックグラウンド）...');
+            
+            try {
+                // 🆕 相対パスに修正！
+                const response = await fetch('/api/process-assessment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(assessmentData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ 重い分析完了:', result);
+                    
+                    // 企業側データベースに保存
+                    saveToEnterpriseDatabase(result);
+                    
+                    // ダッシュボード通知
+                    notifyDashboard(result);
+                    
+                    return { status: 'success', type: 'heavy_analysis', data: result };
+                } else {
+                    console.log('⚠️ 重い分析API応答エラー:', response.status);
+                    return { status: 'error', type: 'heavy_analysis', error: 'API_ERROR' };
+                }
+                
+            } catch (error) {
+                console.error('❌ 重い分析エラー:', error);
+                return { status: 'error', type: 'heavy_analysis', error: error.message };
+            }
+        }
+
+        // Midjourney画像生成（バックグラウンド）
+        async function generateMidjourneyImage(assessmentData) {
+            console.log('🎨 Midjourney画像生成開始（バックグラウンド）...');
+            
+            try {
+                const midjourneyRequest = {
+                    heart_landscape: assessmentData.heart_landscape,
+                    user_name: assessmentData.profile.name,
+                    session_id: assessmentData.session_id
+                };
+
+                // 🆕 相対パスに修正！
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(midjourneyRequest)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Midjourney送信完了:', result);
+                    return { status: 'success', type: 'image_generation', data: result };
+                } else {
+                    console.log('⚠️ Midjourney API応答エラー:', response.status);
+                    return { status: 'error', type: 'image_generation', error: 'API_ERROR' };
+                }
+
+            } catch (error) {
+                console.error('❌ Midjourney連携エラー:', error);
+                return { status: 'error', type: 'image_generation', error: error.message };
+            }
+        }
+
+        // セパレート式成功メッセージ表示
+        function showSeparateSuccess(sessionId) {
+            const container = document.querySelector('.container');
+            
+            const successHTML = `
+                <div class="glass-card" id="separateSuccess">
+                    <div class="separate-status">
+                        <h3>🎉 セパレート式処理完了！</h3>
+                        <p>診断データの同時処理が正常に完了しました。<span class="processing-indicator"></span></p>
+                    </div>
+                    
+                    <div class="step-badge">Processing Complete</div>
+                    <h2 class="title">セパレート式システム稼働中</h2>
+                    <p class="subtitle">
+                        お疲れさまでした！あなたの診断が完了し、セパレート式システムによって以下の処理が同時実行されました。
+                    </p>
+                    
+                    <div style="display: grid; gap: 1rem; margin: 2rem 0;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 16px; border-left: 4px solid #10b981;">
+                            <h4 style="color: #059669; margin-bottom: 0.5rem;">✅ 軽い結果準備完了</h4>
+                            <p style="color: #374151;">あなた専用の美しい結果画面を準備しました</p>
+                        </div>
+                        
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 16px; border-left: 4px solid #3b82f6;">
+                            <h4 style="color: #1d4ed8; margin-bottom: 0.5rem;">🧠 重い分析処理中</h4>
+                            <p style="color: #374151;">企業向け詳細分析をバックグラウンドで実行中</p>
+                        </div>
+                        
+                        <div style="background: rgba(236, 72, 153, 0.1); padding: 1.5rem; border-radius: 16px; border-left: 4px solid #ec4899;">
+                            <h4 style="color: #be185d; margin-bottom: 0.5rem;">🎨 画像生成開始</h4>
+                            <p style="color: #374151;">心象風景アートワークの生成を開始しました</p>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 2rem 0; padding: 1.5rem; background: rgba(255, 255, 255, 0.4); border-radius: 16px;">
+                        <h4 style="color: #2d3748; margin-bottom: 0.5rem;">セッションID</h4>
+                        <code style="background: rgba(0,0,0,0.1); padding: 0.5rem 1rem; border-radius: 8px; font-family: monospace;">${sessionId}</code>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button class="glass-button btn-next" onclick="window.location.href='/light_results.html'">
+                            🌸 軽い結果を見る →
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = successHTML;
+        }
+
+        // エラーメッセージ表示
+        function showErrorMessage() {
+            const container = document.querySelector('.container');
+            
+            const errorHTML = `
+                <div class="glass-card">
+                    <div class="step-badge" style="background: linear-gradient(135deg, #ef4444, #dc2626);">Error</div>
+                    <h2 class="title">処理エラーが発生しました</h2>
+                    <p class="subtitle">申し訳ございません。診断処理中にエラーが発生しました。</p>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #dc2626; margin-bottom: 0.5rem;">🚨 エラー詳細</h4>
+                        <p style="color: #374151;">セパレート式システムの一部でエラーが発生しました。しばらく時間をおいて再度お試しください。</p>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button class="glass-button btn-back" onclick="location.reload()">
+                            🔄 診断をやり直す
+                        </button>
+                        <button class="glass-button btn-next" onclick="window.location.href='/light_results.html'">
+                            🌸 軽い結果を試す
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = errorHTML;
+        }
+
+        // 軽い結果 + 重い結果への案内を追加
+        function showCompletionOptions() {
+            const container = document.querySelector('.container');
+            
+            const optionsHTML = `
+                <div class="glass-card">
+                    <div class="step-badge">診断完了</div>
+                    <h2 class="title">セパレート式処理完了</h2>
+                    <p class="subtitle">診断が完了しました。結果を確認してください。</p>
+                    
+                    <div class="nav-buttons">
+                        <button class="glass-button btn-next" onclick="window.location.href='/light_results.html'">
+                            🌸 軽い結果を見る
+                        </button>
+                        <button class="glass-button btn-back" onclick="window.location.href='/analysis.html'">
+                            📊 重い分析結果
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = optionsHTML;
+        }
