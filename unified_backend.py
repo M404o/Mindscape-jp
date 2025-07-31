@@ -305,20 +305,14 @@ async def serve_diagnosis():
         """)
 
 @app.get("/light_results.html", response_class=HTMLResponse)
-async def serve_results():
-    """結果画面HTML配信"""
+async def serve_light_results():
     try:
         with open("light_results.html", 'r', encoding='utf-8') as f:
             content = f.read()
         return HTMLResponse(content)
     except FileNotFoundError:
-        return HTMLResponse("""
-        <html><body>
-        <h1>結果ファイルが見つかりません</h1>
-        <p>light_results.html が見つかりません</p>
-        </body></html>
-        """)
-
+        return HTMLResponse("<h1>light_results.html が見つかりません</h1>")
+        
 @app.get("/analysis.html", response_class=HTMLResponse)
 async def serve_analysis():
     """分析画面HTML配信"""
