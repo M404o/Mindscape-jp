@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心のコンパス診断 🧭</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        /* コンパス表示 */
+        .compass-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 2rem auto;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border: 3px solid #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .compass-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .direction-label {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #4a5568;
+        }
+
+        .north { top: 10px; left: 50%; transform: translateX(-50%); }
+        .south { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .east { right: 15px; top: 50%; transform: translateY(-50%); }
+        .west { left: 15px; top: 50%; transform: translateY(-50%); }
+
+        .compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to top, #667eea, #e53e3e);
+            border-radius: 2px;
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .compass-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: #2d3748;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+
+        /* 質問セクション */
+        .question-section {
+            text-align: left;
+            margin: 2rem 0;
+        }
+
+        .question {
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #2d3748;
+        }
+
+        .choice-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .choice-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .choice-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        /* 結果セクション */
+        .result-section {
+            display: none;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .result-direction {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+
+        .result-text {
+            font-size: 1.1rem;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .recommendation {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            text-align: left;
+        }
+
+        .recommendation h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ボタン */
+        .action-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem 0.5rem;
+            font-size: 1rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .secondary-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .compass-container {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .choice-buttons {
+                flex-direction: column;
+            }
+            
+            .choice-btn {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- 開始画面 -->
+            <div id="startSection">
+                <h1 class="title">心のコンパス診断 🧭</h1>
+                <p class="subtitle">今日のあなたの心が向いている方角を見つけましょう</p>
+                
+                <div class="compass-container">
+                    <div class="compass-face">
+                        <div class="direction-label north">北<br>挑戦</div>
+                        <div class="direction-label south">南<br>休息</div>
+                        <div class="direction-label east">東<br>学習</div>
+                        <div class="direction-label west">西<br>つながり</div>
+                        <div class="compass-needle" id="compassNeedle"></div>
+                        <div class="compass-center"></div>
+                    </div>
+                </div>
+                
+                <button class="action-btn" onclick="startDiagnosis()">診断開始</button>
+            </div>
+
+            <!-- 質問セクション -->
+            <div id="questionSection" class="hidden">
+                <h2 class="title">簡単な質問にお答えください</h2>
+                <div class="question-section" id="questionsContainer"></div>
+                <button class="action-btn" onclick="calculateResult()" id="submitBtn" disabled>結果を見る</button>
+            </div>
+
+            <!-- 結果セクション -->
+            <div id="resultSection" class="result-section">
+                <h2 class="title">あなたの心のコンパス</h2>
+                
+                <div class="compass-container">
+                    <div class="compass-face">
+                        <div class="direction-label north">北<br>挑戦</div>
+                        <div class="direction-label south">南<br>休息</div>
+                        <div class="direction-label east">東<br>学習</div>
+                        <div class="direction-label west">西<br>つながり</div>
+                        <div class="compass-needle" id="resultNeedle"></div>
+                        <div class="compass-center"></div>
+                    </div>
+                </div>
+                
+                <div class="result-direction" id="resultDirection"></div>
+                <div class="result-text" id="resultText"></div>
+                
+                <div class="recommendation" id="recommendation"></div>
+                
+                <button class="action-btn" onclick="restartDiagnosis()">もう一度診断</button>
+                <button class="action-btn secondary-btn" onclick="goToMainDiagnosis()">本格診断へ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 簡易質問データ
+        const questions = [
+            {
+                id: 'stress1',
+                text: '最近、プレッシャーを感じることが多いですか？',
+                category: 'stress'
+            },
+            {
+                id: 'stress2', 
+                text: '疲れが取れにくいと感じますか？',
+                category: 'stress'
+            },
+            {
+                id: 'energy1',
+                text: '新しいことに挑戦したい気持ちがありますか？',
+                category: 'energy'
+            },
+            {
+                id: 'energy2',
+                text: '今、積極的に行動したい気分ですか？',
+                category: 'energy'
+            },
+            {
+                id: 'curiosity1',
+                text: '何か新しいことを学びたいと思いますか？',
+                category: 'curiosity'
+            },
+            {
+                id: 'curiosity2',
+                text: '知らない分野に興味が湧きますか？',
+                category: 'curiosity'
+            },
+            {
+                id: 'connect1',
+                text: '誰かと深い話をしたいと思いますか？',
+                category: 'connect'
+            },
+            {
+                id: 'connect2',
+                text: '人とのつながりを大切にしたい気持ちがありますか？',
+                category: 'connect'
+            }
+        ];
+
+        const choices = [
+            { text: '全くそう思わない', value: 1 },
+            { text: 'あまりそう思わない', value: 2 },
+            { text: 'どちらでもない', value: 3 },
+            { text: 'そう思う', value: 4 },
+            { text: 'とてもそう思う', value: 5 }
+        ];
+
+        let answers = {};
+
+        // GPTのコンパス判定ロジック
+        function getCompassDirection(scores) {
+            const { stress, energy, curiosity, connect } = scores;
+
+            if (stress >= 75) {
+                return connect >= 60 ? "West" : "South";
+            } else if (energy >= 70) {
+                return "North";
+            } else if (curiosity >= 60) {
+                return "East";
+            } else {
+                return "South";
+            }
+        }
+
+        function startDiagnosis() {
+            document.getElementById('startSection').classList.add('hidden');
+            document.getElementById('questionSection').classList.remove('hidden');
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                
+                const questionText = document.createElement('div');
+                questionText.className = 'question-text';
+                questionText.textContent = `${index + 1}. ${question.text}`;
+                
+                const choicesDiv = document.createElement('div');
+                choicesDiv.className = 'choice-buttons';
+                
+                choices.forEach((choice, choiceIndex) => {
+                    const choiceBtn = document.createElement('button');
+                    choiceBtn.className = 'choice-btn';
+                    choiceBtn.textContent = choice.text;
+                    choiceBtn.onclick = () => selectAnswer(question.id, choice.value, choiceBtn, choicesDiv);
+                    choicesDiv.appendChild(choiceBtn);
+                });
+                
+                questionDiv.appendChild(questionText);
+                questionDiv.appendChild(choicesDiv);
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function selectAnswer(questionId, value, selectedBtn, choicesDiv) {
+            // 選択状態をリセット
+            choicesDiv.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // 選択したボタンをマーク
+            selectedBtn.classList.add('selected');
+            
+            // 回答を保存
+            answers[questionId] = value;
+            
+            // 全ての質問に回答したかチェック
+            checkAllAnswered();
+        }
+
+        function checkAllAnswered() {
+            const submitBtn = document.getElementById('submitBtn');
+            if (Object.keys(answers).length === questions.length) {
+                submitBtn.disabled = false;
+            }
+        }
+
+        function calculateResult() {
+            // スコア計算
+            const scores = {
+                stress: 0,
+                energy: 0,
+                curiosity: 0,
+                connect: 0
+            };
+
+            // カテゴリ別に集計
+            questions.forEach(question => {
+                const answer = answers[question.id] || 0;
+                scores[question.category] += answer;
+            });
+
+            // パーセンテージに変換（5段階 × 2問 = 10点満点を100%に）
+            Object.keys(scores).forEach(key => {
+                scores[key] = (scores[key] / 10) * 100;
+            });
+
+            // GPTのロジックで方向判定
+            const direction = getCompassDirection(scores);
+            
+            showResult(direction, scores);
+        }
+
+        function showResult(direction, scores) {
+            document.getElementById('questionSection').classList.add('hidden');
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // コンパス針の向きを設定
+            const needle = document.getElementById('resultNeedle');
+            const rotations = {
+                'North': '0deg',
+                'East': '90deg', 
+                'South': '180deg',
+                'West': '270deg'
+            };
+            needle.style.transform = `translate(-50%, -100%) rotate(${rotations[direction]})`;
+            
+            // 結果テキストを設定
+            const resultTexts = {
+                'North': {
+                    emoji: '🔺',
+                    title: '北 - 挑戦の方角',
+                    description: '今のあなたの心は新しい挑戦に向かっています。エネルギーに満ちて、前進したい気持ちが強いようです。',
+                    recommendation: '新しいプロジェクトを始めたり、今まで避けていたことにチャレンジしてみましょう。あなたのエネルギーを活かす時です。'
+                },
+                'East': {
+                    emoji: '📚',
+                    title: '東 - 学習の方角', 
+                    description: '知識欲が高まっており、新しいことを学びたい気持ちが強いです。好奇心に従って行動すると良いでしょう。',
+                    recommendation: '本を読んだり、オンライン講座を受けたり、新しいスキルを身につけることに時間を使ってみてください。'
+                },
+                'South': {
+                    emoji: '🌙',
+                    title: '南 - 休息の方角',
+                    description: '心が休息を求めています。無理をせず、自分を大切にする時間が必要かもしれません。',
+                    recommendation: 'ゆっくりお風呂に入ったり、好きな音楽を聞いたり、自然の中で過ごすなど、心を落ち着ける活動がおすすめです。'
+                },
+                'West': {
+                    emoji: '🤝',
+                    title: '西 - つながりの方角',
+                    description: '人とのつながりを求める気持ちが強いようです。孤独感を感じたり、誰かと話したい気分かもしれません。',
+                    recommendation: '友人や家族と時間を過ごしたり、新しい人との出会いを求めてみましょう。コミュニティ活動もおすすめです。'
+                }
+            };
+            
+            const result = resultTexts[direction];
+            document.getElementById('resultDirection').textContent = `${result.emoji} ${result.title}`;
+            document.getElementById('resultText').textContent = result.description;
+            document.getElementById('recommendation').innerHTML = `
+                <h3>おすすめのアクション</h3>
+                <p>${result.recommendation}</p>
+            `;
+        }
+
+        function restartDiagnosis() {
+            answers = {};
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('startSection').classList.remove('hidden');
+            
+            // 針をリセット
+            document.getElementById('compassNeedle').style.transform = 'translate(-50%, -100%) rotate(0deg)';
+        }
+
+        function goToMainDiagnosis() {
+            // 本格診断ページへのリダイレクト
+            window.open('/demo/diagnosis', '_blank');
+        }
+
+        // 初期状態での針のアニメーション
+        window.addEventListener('load', () => {
+            const needle = document.getElementById('compassNeedle');
+            setTimeout(() => {
+                needle.style.transform = 'translate(-50%, -100%) rotate(360deg)';
+                setTimeout(() => {
+                    needle.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+                }, 1500);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
